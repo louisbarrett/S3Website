@@ -14,13 +14,20 @@ import (
 
 var (
 	flagTargetBucket = flag.String("bucket", "", "Name to use for the newly created s3 website bucket")
-	flagTemplate     = flag.String("template", os.GetEnv("TEMPLATE_S3BUCKET"), "Bucket to use as template for content cloning")
+	flagTemplate     = flag.String("template", os.Getenv("TEMPLATE_S3BUCKET"), "Bucket to use as template for content cloning")
 	flagPublic       = flag.Bool("public", false, "Allow public read via s3 api")
 	flagRegion       = flag.String("region", "us-east-1", "AWS Region for bucket and website")
 	flagCleanup      = flag.Bool("cleanup", false, "Delete bucket and website")
+
+	// use session from AWS_PROFILE or AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+	mySession = session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
 )
 
 func main() {
+	// create aws session using all available methods, credentials, env vars, and profile
+
 	flag.Parse()
 	Region := *flagRegion
 	BucketName := *flagTargetBucket
@@ -28,7 +35,6 @@ func main() {
 	objectContentType := "text/html"
 	templateBucket := *flagTemplate
 	// Initliaze Session
-	mySession := session.Must(session.NewSession())
 	svc := s3.New(mySession, aws.NewConfig().WithRegion(Region))
 
 	if *flagCleanup {
